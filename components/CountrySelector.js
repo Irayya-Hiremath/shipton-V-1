@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions } from 'react-native';
+import Modal from 'react-native-modal';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ChevronDown, Search, X } from 'lucide-react-native';
-import { TextInput } from 'react-native';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const countries = [
   { code: 'IN', name: 'India', dialCode: '+91', flag: '🇮🇳' },
@@ -62,11 +64,17 @@ export default function CountrySelector({ selectedCountry, onCountrySelect }) {
       </TouchableOpacity>
 
       <Modal
-        visible={modalVisible}
-        animationType="slide"
-        presentationStyle="pageSheet"
+        isVisible={modalVisible}
+        onBackdropPress={() => setModalVisible(false)}
+        onBackButtonPress={() => setModalVisible(false)}
+        style={styles.bottomModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        backdropOpacity={0.5}
+        useNativeDriverForBackdrop={true}
+        hideModalContentWhileAnimating={true}
       >
-        <View style={styles.modalContainer}>
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Country</Text>
             <TouchableOpacity
@@ -121,9 +129,19 @@ const createStyles = (theme) => StyleSheet.create({
     fontFamily: theme.fonts.medium,
     color: theme.colors.text,
   },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
+  bottomModal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 22,
+    borderRadius: 4,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: screenHeight * 0.8,
+    width: '100%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -133,6 +151,7 @@ const createStyles = (theme) => StyleSheet.create({
     paddingTop: 60,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    width: '100%',
   },
   modalTitle: {
     fontSize: 20,
@@ -160,6 +179,7 @@ const createStyles = (theme) => StyleSheet.create({
   },
   countryList: {
     flex: 1,
+    width: '100%',
   },
   countryItem: {
     flexDirection: 'row',

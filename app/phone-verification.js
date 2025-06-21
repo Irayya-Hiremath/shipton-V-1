@@ -165,7 +165,9 @@ const createStyles = (theme) => StyleSheet.create({
     marginTop: 2,
   },
   form: {
-    flex: 1,
+    // flex: 1,
+    paddingLeft:20,
+    width:'100%',
   },
   phoneContainer: {
     marginVertical: 24,

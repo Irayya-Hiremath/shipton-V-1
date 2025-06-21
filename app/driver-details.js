@@ -121,18 +121,18 @@ export default function DriverDetails() {
   };
 
   const handleContinue = () => {
-    if (!name.trim()) {
-      Alert.alert('Error', 'Please enter driver name');
-      return;
-    }
+    // if (!name.trim()) {
+    //   Alert.alert('Error', 'Please enter driver name');
+    //   return;
+    // }
     
-    const allDocsUploaded = documents.every(doc => uploadedDocs[doc.id]);
+    // const allDocsUploaded = documents.every(doc => uploadedDocs[doc.id]);
     // if (!allDocsUploaded) {
     //   Alert.alert('Error', 'Please upload all required documents');
     //   return;
     // }
 
-    router.push('/home');
+    router.push('/(tabs)');
   };
 
   const handleBack = () => {
@@ -154,13 +154,13 @@ export default function DriverDetails() {
           <Text style={styles.title}>Driver Details</Text>
           
           <View style={styles.stepIndicator}>
-            <View style={styles.step}>
+            <View style={[styles.step, styles.completedStep]}>
               <View style={styles.iconContainer}>
                 <Check size={16} color={theme.colors.white} />
               </View>
             </View>
             <View style={[styles.stepLine, styles.completedStepLine]} />
-            <View style={styles.step}>
+            <View style={[styles.step, styles.completedStep]}>
               <View style={styles.iconContainer}>
                 <Check size={16} color={theme.colors.white} />
               </View>
@@ -213,26 +213,16 @@ export default function DriverDetails() {
                           style={styles.uploadedImage}
                           resizeMode="cover"
                         />
-                      </View>
-                      <View style={styles.uploadedActions}>
-                        <TouchableOpacity
-                          style={[styles.uploadButton, styles.cancelButton]}
+                        <TouchableOpacity 
+                          style={styles.deleteButton}
                           onPress={() => handleCancel(document.id)}
                         >
-                          <View style={styles.iconContainer}>
-                            <X size={16} color={theme.colors.error} />
-                          </View>
-                          <Text style={[styles.uploadButtonText, styles.cancelButtonText]}>Remove</Text>
+                          <X size={16} color={theme.colors.white} />
                         </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.uploadButton, styles.newUploadButton]}
-                          onPress={() => handleUpload(document.id)}
-                        >
-                          <View style={styles.iconContainer}>
-                            <Upload size={16} color={theme.colors.primary} />
-                          </View>
-                          <Text style={styles.uploadButtonText}>New Upload</Text>
-                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.checkmarkContainer}>
+                        <Check size={16} color={theme.colors.success} />
+                        <Text style={styles.checkmarkText}>Uploaded</Text>
                       </View>
                     </View>
                   ) : (
@@ -256,7 +246,7 @@ export default function DriverDetails() {
           <CustomButton
             title="Complete Registration"
             onPress={handleContinue}
-            disabled={!isFormValid}
+            // disabled={!isFormValid}
             style={styles.continueButton}
           />
         </Animated.View>
@@ -315,6 +305,12 @@ const createStyles = (theme) => StyleSheet.create({
   activeStep: {
     backgroundColor: theme.colors.primary,
   },
+  inactiveStep: {
+    backgroundColor: theme.colors.border,
+  },
+  completedStep: {
+    backgroundColor: theme.colors.success,
+  },
   stepNumber: {
     fontSize: 14,
     fontFamily: theme.fonts.semiBold,
@@ -326,8 +322,14 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.border,
     marginHorizontal: 8,
   },
-  completedStepLine: {
+  activeStepLine: {
     backgroundColor: theme.colors.primary,
+  },
+  inactiveStepLine: {
+    backgroundColor: theme.colors.border,
+  },
+  completedStepLine: {
+    backgroundColor: theme.colors.success,
   },
   stepLabels: {
     flexDirection: 'row',
@@ -342,8 +344,11 @@ const createStyles = (theme) => StyleSheet.create({
   activeStepLabel: {
     color: theme.colors.primary,
   },
+  inactiveStepLabel: {
+    color: theme.colors.textSecondary,
+  },
   completedStepLabel: {
-    color: theme.colors.primary,
+    color: theme.colors.success,
   },
   content: {
     flex: 1,
@@ -405,24 +410,39 @@ const createStyles = (theme) => StyleSheet.create({
   uploadButtonText: {
     fontSize: 14,
     fontFamily: theme.fonts.medium,
-    color: theme.colors.primary,
+    color: theme.colors.text,
     marginLeft: 4,
   },
   uploadedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    width: '100%',
   },
   uploadedImageContainer: {
-    width: 60,
-    height: 60,
+    width: '100%',
+    height: 200,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: theme.colors.surface,
+    position: 'relative',
   },
   uploadedImage: {
     width: '100%',
     height: '100%',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: theme.colors.error,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   uploadedActions: {
     flex: 1,
@@ -440,5 +460,16 @@ const createStyles = (theme) => StyleSheet.create({
   },
   continueButton: {
     marginTop: 20,
+  },
+  checkmarkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  checkmarkText: {
+    fontSize: 14,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.success,
   },
 });

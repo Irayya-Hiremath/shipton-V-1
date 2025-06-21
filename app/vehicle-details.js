@@ -7,6 +7,7 @@ import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import CustomButton from '@/components/CustomButton';
 import * as ImagePicker from 'expo-image-picker';
 import * as Camera from 'expo-camera';
+import RNModal from 'react-native-modal';
 
 const cities = [
   'Bangalore', 'Mumbai', 'Delhi', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'
@@ -58,8 +59,8 @@ export default function VehicleDetails() {
       'Upload Vehicle RC',
       'Choose upload method',
       [
-        { 
-          text: 'Camera', 
+        {
+          text: 'Camera',
           onPress: async () => {
             try {
               const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -76,7 +77,7 @@ export default function VehicleDetails() {
                 base64: false,
                 exif: false,
               });
-              
+
               if (!result.canceled && result.assets && result.assets[0]) {
                 setRcUploaded(true);
                 setRcImage(result.assets[0].uri);
@@ -87,8 +88,8 @@ export default function VehicleDetails() {
             }
           }
         },
-        { 
-          text: 'Gallery', 
+        {
+          text: 'Gallery',
           onPress: async () => {
             try {
               const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -105,7 +106,7 @@ export default function VehicleDetails() {
                 base64: false,
                 exif: false,
               });
-              
+
               if (!result.canceled && result.assets && result.assets[0]) {
                 setRcUploaded(true);
                 setRcImage(result.assets[0].uri);
@@ -127,8 +128,8 @@ export default function VehicleDetails() {
       'Are you sure you want to remove the uploaded RC?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Remove', 
+        {
+          text: 'Remove',
           style: 'destructive',
           onPress: () => {
             setRcUploaded(false);
@@ -144,7 +145,7 @@ export default function VehicleDetails() {
     //   Alert.alert('Error', 'Please enter vehicle number');
     //   return;
     // }
-    
+
     // if (!rcUploaded) {
     //   Alert.alert('Error', 'Please upload Vehicle RC');
     //   return;
@@ -158,14 +159,12 @@ export default function VehicleDetails() {
   };
 
   const isFormValid = vehicleNumber.trim() && rcUploaded;
-
   const getVehicleTypeIcon = (typeId) => {
     const type = vehicleTypes.find(t => t.id === typeId);
     return type ? type.icon : Truck;
   };
 
   const VehicleTypeIcon = getVehicleTypeIcon(selectedVehicleType);
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -175,29 +174,29 @@ export default function VehicleDetails() {
               <ArrowLeft size={24} color={theme.colors.text} />
             </View>
           </TouchableOpacity>
-          
+
           <Text style={styles.title}>Vehicle Details</Text>
-          
+
           <View style={styles.stepIndicator}>
             <View style={[styles.step, styles.completedStep]}>
               <View style={styles.iconContainer}>
                 <Check size={16} color={theme.colors.white} />
               </View>
             </View>
-            <View style={styles.stepLine} />
+            <View style={[styles.stepLine, styles.completedStepLine]} />
             <View style={[styles.step, styles.activeStep]}>
               <Text style={styles.stepNumber}>2</Text>
             </View>
-            <View style={styles.stepLine} />
-            <View style={styles.step}>
+            <View style={[styles.stepLine, styles.inactiveStepLine]} />
+            <View style={[styles.step, styles.inactiveStep]}>
               <Text style={styles.stepNumber}>3</Text>
             </View>
           </View>
-          
+
           <View style={styles.stepLabels}>
-            <Text style={styles.stepLabel}>Owner</Text>
+            <Text style={[styles.stepLabel, styles.completedStepLabel]}>Owner</Text>
             <Text style={[styles.stepLabel, styles.activeStepLabel]}>Vehicle</Text>
-            <Text style={styles.stepLabel}>Driver</Text>
+            <Text style={[styles.stepLabel, styles.inactiveStepLabel]}>Driver</Text>
           </View>
         </Animated.View>
 
@@ -222,31 +221,21 @@ export default function VehicleDetails() {
               {rcUploaded ? (
                 <View style={styles.uploadedContainer}>
                   <View style={styles.uploadedImageContainer}>
-                    <Image 
-                      source={{ uri: rcImage }} 
+                    <Image
+                      source={{ uri: rcImage }}
                       style={styles.uploadedImage}
                       resizeMode="cover"
                     />
-                  </View>
-                  <View style={styles.uploadedActions}>
-                    <TouchableOpacity
-                      style={[styles.uploadButton, styles.cancelButton]}
+                    <TouchableOpacity 
+                      style={styles.deleteButton}
                       onPress={handleCancelRC}
                     >
-                      <View style={styles.iconContainer}>
-                        <X size={16} color={theme.colors.error} />
-                      </View>
-                      <Text style={[styles.uploadButtonText, styles.cancelButtonText]}>Remove</Text>
+                      <X size={16} color={theme.colors.white} />
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.uploadButton, styles.newUploadButton]}
-                      onPress={handleUploadRC}
-                    >
-                      <View style={styles.iconContainer}>
-                        <Upload size={16} color={theme.colors.primary} />
-                      </View>
-                      <Text style={styles.uploadButtonText}>New Upload</Text>
-                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.checkmarkContainer}>
+                    <Check size={16} color={theme.colors.success} />
+                    <Text style={styles.checkmarkText}>Uploaded</Text>
                   </View>
                 </View>
               ) : (
@@ -318,109 +307,148 @@ export default function VehicleDetails() {
       </ScrollView>
 
       {/* City Selection Modal */}
-      <Modal
-        visible={showCityModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowCityModal(false)}
-        statusBarTranslucent
+      <RNModal
+        isVisible={showCityModal}
+        onBackdropPress={() => setShowCityModal(false)}
+        onBackButtonPress={() => setShowCityModal(false)}
+        style={styles.bottomModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        backdropOpacity={0.5}
+        useNativeDriverForBackdrop={true}
+        hideModalContentWhileAnimating={true}
       >
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: 'white', fontSize: 24 }}>Test Modal</Text>
-          <TouchableOpacity onPress={() => setShowCityModal(false)}>
-            <Text style={{ color: 'yellow', fontSize: 18 }}>Close</Text>
-          </TouchableOpacity>
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select City</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowCityModal(false)}
+            >
+              <Text style={styles.modalClose}>Done</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={cities}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.modalItem, { backgroundColor: theme.colors.background }]}
+                onPress={() => {
+                  setSelectedCity(item);
+                  setShowCityModal(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalItemText}>{item}</Text>
+                {selectedCity === item && (
+                  <View style={styles.checkmarkContainer}>
+                    <Check size={20} color={theme.colors.primary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+            initialNumToRender={8}
+            maxToRenderPerBatch={8}
+            windowSize={5}
+            removeClippedSubviews={true}
+          />
         </View>
-      </Modal>
+      </RNModal>
 
       {/* Vehicle Type Selection Modal */}
-      <Modal
-        visible={showVehicleTypeModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowVehicleTypeModal(false)}
-        statusBarTranslucent
+      <RNModal
+        isVisible={showVehicleTypeModal}
+        onBackdropPress={() => setShowVehicleTypeModal(false)}
+        onBackButtonPress={() => setShowVehicleTypeModal(false)}
+        style={styles.bottomModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        backdropOpacity={0.5}
+        useNativeDriverForBackdrop={true}
+        hideModalContentWhileAnimating={true}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Vehicle Type</Text>
-              <TouchableOpacity 
-                style={styles.modalCloseButton}
-                onPress={() => setShowVehicleTypeModal(false)}
-              >
-                <Text style={styles.modalClose}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={vehicleTypes}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedVehicleType(item.id);
-                    setSelectedBodyType(vehicleBodyTypes[item.id]?.[0]?.id || '');
-                    setShowVehicleTypeModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item.name}</Text>
-                  {selectedVehicleType === item.id && (
-                    <View style={styles.checkmarkContainer}>
-                      <Check size={20} color={theme.colors.primary} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Vehicle Type</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowVehicleTypeModal(false)}
+            >
+              <Text style={styles.modalClose}>Done</Text>
+            </TouchableOpacity>
           </View>
+          <FlatList
+            data={vehicleTypes}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setSelectedVehicleType(item.id);
+                  setSelectedBodyType(vehicleBodyTypes[item.id]?.[0]?.id || '');
+                  setShowVehicleTypeModal(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>{item.name}</Text>
+                {selectedVehicleType === item.id && (
+                  <View style={styles.checkmarkContainer}>
+                    <Check size={20} color={theme.colors.primary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
         </View>
-      </Modal>
+      </RNModal>
 
       {/* Body Type Selection Modal */}
-      <Modal
-        visible={showBodyTypeModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setShowBodyTypeModal(false)}
-        statusBarTranslucent
+      <RNModal
+        isVisible={showBodyTypeModal}
+        onBackdropPress={() => setShowBodyTypeModal(false)}
+        onBackButtonPress={() => setShowBodyTypeModal(false)}
+        style={styles.bottomModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        backdropOpacity={0.5}
+        useNativeDriverForBackdrop={true}
+        hideModalContentWhileAnimating={true}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Vehicle Body Type</Text>
-              <TouchableOpacity 
-                style={styles.modalCloseButton}
-                onPress={() => setShowBodyTypeModal(false)}
-              >
-                <Text style={styles.modalClose}>Done</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={vehicleBodyTypes[selectedVehicleType] || []}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setSelectedBodyType(item.id);
-                    setShowBodyTypeModal(false);
-                  }}
-                >
-                  <Text style={styles.modalItemText}>{item.name}</Text>
-                  {selectedBodyType === item.id && (
-                    <View style={styles.checkmarkContainer}>
-                      <Check size={20} color={theme.colors.primary} />
-                    </View>
-                  )}
-                </TouchableOpacity>
-              )}
-              showsVerticalScrollIndicator={false}
-            />
+        <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Vehicle Body Type</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setShowBodyTypeModal(false)}
+            >
+              <Text style={styles.modalClose}>Done</Text>
+            </TouchableOpacity>
           </View>
+          <FlatList
+            data={vehicleBodyTypes[selectedVehicleType] || []}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  setSelectedBodyType(item.id);
+                  setShowBodyTypeModal(false);
+                }}
+              >
+                <Text style={styles.modalItemText}>{item.name}</Text>
+                {selectedBodyType === item.id && (
+                  <View style={styles.checkmarkContainer}>
+                    <Check size={20} color={theme.colors.primary} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            )}
+            showsVerticalScrollIndicator={false}
+          />
         </View>
-      </Modal>
+      </RNModal>
     </SafeAreaView>
   );
 }
@@ -469,6 +497,9 @@ const createStyles = (theme) => StyleSheet.create({
   activeStep: {
     backgroundColor: theme.colors.primary,
   },
+  inactiveStep: {
+    backgroundColor: theme.colors.border,
+  },
   completedStep: {
     backgroundColor: theme.colors.success,
   },
@@ -483,6 +514,15 @@ const createStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.border,
     marginHorizontal: 8,
   },
+  activeStepLine: {
+    backgroundColor: theme.colors.primary,
+  },
+  inactiveStepLine: {
+    backgroundColor: theme.colors.border,
+  },
+  completedStepLine: {
+    backgroundColor: theme.colors.success,
+  },
   stepLabels: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -495,6 +535,12 @@ const createStyles = (theme) => StyleSheet.create({
   },
   activeStepLabel: {
     color: theme.colors.primary,
+  },
+  inactiveStepLabel: {
+    color: theme.colors.textSecondary,
+  },
+  completedStepLabel: {
+    color: theme.colors.success,
   },
   content: {
     flex: 1,
@@ -553,20 +599,35 @@ const createStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
   },
   uploadedContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    width: '100%',
   },
   uploadedImageContainer: {
-    width: 60,
-    height: 60,
+    width: '100%',
+    height: 200,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: theme.colors.surface,
+    position: 'relative',
   },
   uploadedImage: {
     width: '100%',
     height: '100%',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: theme.colors.error,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   uploadedActions: {
     flex: 1,
@@ -615,6 +676,10 @@ const createStyles = (theme) => StyleSheet.create({
   continueButton: {
     marginTop: 20,
   },
+  bottomModal: {
+    justifyContent: 'flex-end',
+    margin: 0,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -626,6 +691,14 @@ const createStyles = (theme) => StyleSheet.create({
     borderTopRightRadius: 20,
     maxHeight: '80%',
     paddingBottom: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -634,6 +707,7 @@ const createStyles = (theme) => StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
   modalTitle: {
     fontSize: 18,
@@ -655,6 +729,7 @@ const createStyles = (theme) => StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
   modalItemText: {
     fontSize: 16,
@@ -662,10 +737,15 @@ const createStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
   },
   checkmarkContainer: {
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 8,
+    gap: 4,
+  },
+  checkmarkText: {
+    fontSize: 14,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.success,
   },
   iconContainer: {
     width: 24,
@@ -673,4 +753,10 @@ const createStyles = (theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-});
+  uploadButtonText: {
+    fontSize: 14,
+    fontFamily: theme.fonts.medium,
+    color: theme.colors.text,
+    marginLeft: 4,
+  },
+}); 

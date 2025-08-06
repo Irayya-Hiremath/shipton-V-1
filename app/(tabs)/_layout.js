@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Chrome as Home, FileText, Camera, Settings } from 'lucide-react-native';
+import { Chrome as Home, FileText, Camera, Settings, Bell, DollarSign, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   const { theme } = useTheme();
@@ -39,10 +39,31 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="notifications"
+        options={{
+          title: 'Notifications',
+          tabBarIcon: ({ size, color }) => <Bell size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="earnings"
+        options={{
+          title: 'Earnings',
+          tabBarIcon: ({ size, color }) => <DollarSign size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="camera"
         options={{
           title: 'Camera',
           tabBarIcon: ({ size, color }) => <Camera size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ size, color }) => <User size={size} color={color} />,
         }}
       />
       <Tabs.Screen

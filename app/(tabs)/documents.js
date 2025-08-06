@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Upload, Check, CircleAlert as AlertCircle, FileText, Camera, User } from 'lucide-react-native';
+import { Upload, Check, CircleAlert as AlertCircle, FileText, Camera, User, RefreshCw } from 'lucide-react-native';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
+import DocumentUploadCard from '@/components/DocumentUploadCard';
 
 const documents = [
   {
@@ -51,36 +52,38 @@ const documents = [
 
 export default function DocumentsTab() {
   const { theme } = useTheme();
-  const [uploadProgress, setUploadProgress] = useState({});
+  const [uploadedDocs, setUploadedDocs] = useState({
+    pan: true,
+    selfie: true,
+  });
+  const [docImages, setDocImages] = useState({
+    pan: 'https://images.pexels.com/photos/6863183/pexels-photo-6863183.jpeg?auto=compress&cs=tinysrgb&w=400',
+    selfie: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
+  });
+  const [refreshing, setRefreshing] = useState(false);
 
   const styles = createStyles(theme);
 
-  const handleUpload = (documentId) => {
-    Alert.alert(
-      'Upload Document',
-      'Choose upload method',
-      [
-        { text: 'Camera', onPress: () => simulateUpload(documentId, 'camera') },
-        { text: 'Gallery', onPress: () => simulateUpload(documentId, 'gallery') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handleUpload = (documentId, imageUri) => {
+    setUploadedDocs(prev => ({ ...prev, [documentId]: true }));
+    setDocImages(prev => ({ ...prev, [documentId]: imageUri }));
   };
 
-  const simulateUpload = (documentId, method) => {
-    setUploadProgress(prev => ({ ...prev, [documentId]: 0 }));
-    
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        const currentProgress = prev[documentId] || 0;
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-          return { ...prev, [documentId]: 100 };
-        }
-        return { ...prev, [documentId]: currentProgress + 10 };
-      });
-    }, 200);
+  const handleRemove = (documentId) => {
+    setUploadedDocs(prev => ({ ...prev, [documentId]: false }));
+    setDocImages(prev => ({ ...prev, [documentId]: null }));
   };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    // Simulate refresh
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const completedCount = Object.values(uploadedDocs).filter(Boolean).length;
+  const progressPercentage = (completedCount / documents.length) * 100;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -123,7 +126,17 @@ export default function DocumentsTab() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            colors={[theme.colors.primary]}
+          />
+        }
+      >
         <Animated.View entering={FadeInUp.delay(200).duration(600)} style={styles.header}>
           <Text style={styles.title}>Document Upload</Text>
           <Text style={styles.subtitle}>
@@ -133,81 +146,30 @@ export default function DocumentsTab() {
 
         <Animated.View entering={FadeInDown.delay(400).duration(600)} style={styles.progressContainer}>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: '50%' }]} />
+            <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
           </View>
-          <Text style={styles.progressText}>3 of 6 documents completed</Text>
+          <Text style={styles.progressText}>{completedCount} of {documents.length} documents completed</Text>
         </Animated.View>
 
         <View style={styles.documentsContainer}>
           {documents.map((document, index) => {
-            const StatusIcon = getStatusIcon(document.status);
-            const DocumentIcon = document.icon;
-            const isUploading = uploadProgress[document.id] !== undefined && uploadProgress[document.id] < 100;
-            
+            const isUploaded = uploadedDocs[document.id];
+            const imageUri = docImages[document.id];
+
             return (
-              <Animated.View
+              <DocumentUploadCard
                 key={document.id}
-                entering={FadeInUp.delay(600 + index * 100).duration(600)}
-                style={styles.documentCard}
-              >
-                <View style={styles.documentHeader}>
-                  <View style={styles.documentIconContainer}>
-                    <DocumentIcon size={24} color={theme.colors.primary} />
-                  </View>
-                  <View style={styles.documentInfo}>
-                    <Text style={styles.documentTitle}>{document.title}</Text>
-                    <Text style={styles.documentDescription}>{document.description}</Text>
-                  </View>
-                  <View style={styles.statusContainer}>
-                    <StatusIcon size={20} color={getStatusColor(document.status)} />
-                  </View>
-                </View>
-
-                <View style={styles.documentFooter}>
-                  <Text style={[styles.statusText, { color: getStatusColor(document.status) }]}>
-                    {getStatusText(document.status)}
-                  </Text>
-                  
-                  {document.status === 'pending' && (
-                    <TouchableOpacity
-                      style={styles.uploadButton}
-                      onPress={() => handleUpload(document.id)}
-                      disabled={isUploading}
-                    >
-                      {isUploading ? (
-                        <Text style={styles.uploadButtonText}>
-                          Uploading... {uploadProgress[document.id]}%
-                        </Text>
-                      ) : (
-                        <>
-                          <Upload size={16} color={theme.colors.primary} />
-                          <Text style={styles.uploadButtonText}>Upload</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  )}
-
-                  {document.status === 'verified' && (
-                    <TouchableOpacity style={styles.viewButton}>
-                      <Text style={styles.viewButtonText}>View</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {document.status === 'uploaded' && (
-                    <TouchableOpacity style={styles.retryButton}>
-                      <Text style={styles.retryButtonText}>Replace</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-
-                {isUploading && (
-                  <View style={styles.uploadProgressContainer}>
-                    <View style={styles.uploadProgressBar}>
-                      <View style={[styles.uploadProgressFill, { width: `${uploadProgress[document.id]}%` }]} />
-                    </View>
-                  </View>
-                )}
-              </Animated.View>
+                document={{
+                  id: document.id,
+                  name: document.title,
+                  description: document.description,
+                }}
+                isUploaded={isUploaded}
+                imageUri={imageUri}
+                onUpload={handleUpload}
+                onRemove={handleRemove}
+                delay={600 + index * 100}
+              />
             );
           })}
         </View>
@@ -273,106 +235,6 @@ const createStyles = (theme) => StyleSheet.create({
   },
   documentsContainer: {
     marginBottom: 24,
-  },
-  documentCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: theme.colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  documentHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  documentIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.secondary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  documentInfo: {
-    flex: 1,
-  },
-  documentTitle: {
-    fontSize: 16,
-    fontFamily: theme.fonts.semiBold,
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  documentDescription: {
-    fontSize: 14,
-    fontFamily: theme.fonts.regular,
-    color: theme.colors.textSecondary,
-  },
-  statusContainer: {
-    padding: 8,
-  },
-  documentFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  statusText: {
-    fontSize: 14,
-    fontFamily: theme.fonts.medium,
-  },
-  uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  uploadButtonText: {
-    fontSize: 14,
-    fontFamily: theme.fonts.medium,
-    color: theme.colors.primary,
-    marginLeft: 4,
-  },
-  viewButton: {
-    backgroundColor: theme.colors.success,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  viewButtonText: {
-    fontSize: 14,
-    fontFamily: theme.fonts.medium,
-    color: theme.colors.white,
-  },
-  retryButton: {
-    backgroundColor: theme.colors.warning,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  retryButtonText: {
-    fontSize: 14,
-    fontFamily: theme.fonts.medium,
-    color: theme.colors.white,
-  },
-  uploadProgressContainer: {
-    marginTop: 12,
-  },
-  uploadProgressBar: {
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2,
-  },
-  uploadProgressFill: {
-    height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 2,
   },
   helpContainer: {
     backgroundColor: theme.colors.secondary,

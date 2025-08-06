@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Bell, Package, DollarSign, AlertTriangle, Info } from 'lucide-react-native';
+import { Bell, Package, DollarSign, TriangleAlert as AlertTriangle, Info } from 'lucide-react-native';
 import Animated, { FadeInRight, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);

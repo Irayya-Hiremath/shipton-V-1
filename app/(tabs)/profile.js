@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, RefreshControl } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { User, Phone, MapPin, Truck, FileText, Star, Award, Calendar, Edit } from 'lucide-react-native';
+import { User, Phone, MapPin, Truck, FileText, Star, Award, Calendar, CreditCard as Edit } from 'lucide-react-native';
 import Animated, { FadeInUp, FadeInDown } from 'react-native-reanimated';
 import ProfileHeader from '@/components/ProfileHeader';
 
